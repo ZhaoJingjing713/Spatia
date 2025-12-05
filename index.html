@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spatia: Video Generation with Updatable Spatial Memory</title>
+    <meta name="description" content="Spatia: Video Generation with Updatable Spatial Memory.">
+    <meta name="keywords" content="Video Generation, Spatial Memory, 3D Point Cloud, Diffusion Models">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Google Sans', 'Noto Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1a1a1a',
+                        secondary: '#4a4a4a',
+                        accent: '#2563eb',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-PYVRSFMDRL');
+    </script>
+    
+    <style>
+        /* Gallery Card Styles */
+        .gallery-card {
+            position: absolute;
+            width: 29%; 
+            aspect-ratio: 1248 / 704;
+            top: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Empty placeholder style */
+        .gallery-card.empty {
+            box-shadow: none;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        /* Slot 1: Left */
+        .gallery-card.left {
+            left: 19.5%;
+            scale: 1.0;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        /* Slot 2: Center (Active) */
+        .gallery-card.active {
+            left: 50%;
+            scale: 1.0; 
+            opacity: 1;
+            z-index: 20;
+        }
+
+        /* Slot 3: Right */
+        .gallery-card.right {
+            left: 80.5%;
+            scale: 1.0;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        /* Hidden Left (Off-screen) */
+        .gallery-card.hidden-left {
+            left: -11%;
+            scale: 0.9;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        /* Hidden Right (Off-screen) */
+        .gallery-card.hidden-right {
+            left: 111%;
+            scale: 0.9;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        /* Bounce Animations for Non-Circular Feedback */
+        @keyframes bouncePrev {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(40px); } /* Bounces Right to show "Start" */
+        }
+        @keyframes bounceNext {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-40px); } /* Bounces Left to show "End" */
+        }
+
+        .animate-bounce-prev {
+            animation: bouncePrev 0.4s ease-in-out;
+        }
+        .animate-bounce-next {
+            animation: bounceNext 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden bg-gray-50">
+
+    <!-- ========================================== -->
+    <!-- UPPER HALF: WHITE BACKGROUND (Header)      -->
+    <!-- ========================================== -->
+    <header class="pt-16 pb-12 bg-white border-b border-gray-100">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-black mb-6 leading-tight">
+                Spatia: Video Generation with <br /> Updatable Spatial Memory
+            </h1>
+
+            <!-- Authors -->
+            <div class="flex flex-wrap justify-center gap-x-8 gap-y-2 text-lg text-gray-800 mb-4 font-normal">
+                <a href="https://github.com/ZhaoJingjing713" class="hover:text-accent transition-colors">Jinjing Zhao<sup>*1</sup></a>
+                <a href="https://scholar.google.com/citations?user=-ncz2s8AAAAJ" class="hover:text-accent transition-colors">Fangyun Wei<sup>*2</sup></a>
+                <a href="https://www.liuzhening.top" class="hover:text-accent transition-colors">Zhening Liu<sup>3</sup></a>
+                <a href="https://hongyanz.github.io/" class="hover:text-accent transition-colors">Hongyang Zhang<sup>4</sup></a>
+                <a href="http://changxu.xyz/" class="hover:text-accent transition-colors">Chang Xu<sup>1</sup></a>
+                <a href="https://scholar.google.com/citations?user=djk5l-4AAAAJ" class="hover:text-accent transition-colors">Yan Lu<sup>2</sup></a>
+            </div>
+
+            <!-- Affiliations -->
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-600 mb-4">
+                <span><sup>1</sup>The University of Sydney</span>
+                <span><sup>2</sup>Microsoft Research Asia</span>
+                <span><sup>3</sup>Hong Kong University of Science and Technology</span>
+                <span><sup>4</sup>University of Waterloo</span>
+            </div>
+            
+            <div class="text-xs text-gray-400 mb-8">
+                <sup>*</sup>Equal contribution
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center gap-4">
+                <!-- Paper Button (Black) -->
+                <a href="./static/pdf/spatia-paper.pdf" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-all shadow-sm">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Paper</span>
+                </a>
+                <!-- arXiv Button (White with border) -->
+                <a href="./static/pdf/spatia-paper.pdf" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-2 bg-white text-gray-800 border border-gray-200 rounded-full font-medium hover:bg-gray-50 transition-all shadow-sm">
+                    <i class="ai ai-arxiv"></i>
+                    <span>arXiv</span>
+                </a>
+                <!-- Code Button (White with border) -->
+                <a href="#" class="inline-flex items-center gap-2 px-6 py-2 bg-white text-gray-800 border border-gray-200 rounded-full font-medium hover:bg-gray-50 transition-all shadow-sm">
+                    <i class="fab fa-github"></i>
+                    <span>Code</span>
+                    <span class="text-xs text-gray-500">(coming soon)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- LOWER HALF: GRAY BACKGROUND (Main Content) -->
+    <!-- ========================================== -->
+    <main class="w-full py-16 bg-gray-50 space-y-24">
+
+        <!-- Hero Branding & Featured Video -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <!-- Hero Branding -->
+            <div class="mb-10">
+                <h2 class="text-6xl md:text-8xl font-bold tracking-tight mb-4">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]">Spatia</span>
+                </h2>
+                <p class="text-2xl md:text-3xl text-gray-700 font-medium mb-6">
+                    Video Generation with Updatable Spatial Memory
+                </p>
+                <p class="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">
+                    Long-horizon, spatially consistent video generation enabled by persistent 3D<br class="hidden md:block"> scene point clouds and dynamic-static disentanglement.
+                </p>
+            </div>
+
+            <!-- Featured Video (Teaser) - CONTROLLABLE & MOVED BADGE TO TOP-RIGHT -->
+            <div class="relative w-full max-w-4xl mx-auto group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-200 to-purple-200 rounded-2xl blur-3xl opacity-40 group-hover:opacity-60 transition duration-500"></div>
+                <div class="relative bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-200 aspect-video">
+                    <!-- Added controls attribute -->
+                    <video autoplay muted loop playsinline controls class="w-full h-full object-cover">
+                        <source src="./static/videos/teaser-vid.mp4" type="video/mp4">
+                    </video>
+                     <!-- Badge moved to Top-Right -->
+                     <div class="absolute top-4 right-4 bg-black/60 backdrop-blur text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none z-10">
+                        Featured Result
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Abstract & Teaser Image Combined -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="h-px bg-gray-200 flex-1"></div>
+                <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Abstract</h2>
+                <div class="h-px bg-gray-200 flex-1"></div>
+            </div>
+            
+            <!-- Combined Card -->
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-8 md:p-10">
+                <!-- Abstract Text -->
+                <p class="text-gray-700 leading-relaxed text-justify text-lg font-light mb-10">
+                    Existing video generation models struggle to maintain long-term spatial and temporal consistency due to the dense, high-dimensional nature of video signals. To overcome this limitation, we propose <strong>Spatia</strong>, a spatial memory-aware video generation framework that explicitly preserves a 3D scene point cloud as persistent spatial memory. Spatia iteratively generates video clips conditioned on this spatial memory and continuously updates it through visual SLAM. This dynamic-static disentanglement design enhances spatial consistency throughout the generation process while preserving the model's ability to produce realistic dynamic entities. Furthermore, Spatia enables applications such as explicit camera control and 3D-aware interactive editing, providing a geometrically grounded framework for scalable, memory-driven video generation.
+                </p>
+                
+                <!-- Teaser Image (Inside same box) -->
+                <div class="w-full border-t border-gray-100 pt-10">
+                    <img src="./static/images/teaser.png" 
+                         class="w-full h-auto rounded-xl object-cover" 
+                         alt="Spatia Teaser: Video Generation with Updatable Spatial Memory"
+                         onerror="this.src='https://via.placeholder.com/1200x600/f3f4f6/9ca3af?text=Teaser+Image+Placeholder';">
+                    <p class="mt-4 text-gray-500 text-sm text-center italic">
+                        <strong>Figure 1.</strong> Spatia maintains a scene point cloud as its spatial memory and conditions on it throughout the iterative video generation process. It enables: (a) dynamic-static disentanglement; (b) spatially consistent generation; (c) explicit camera control; and (d) 3D-aware interactive editing.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Method Overview -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="h-px bg-gray-200 flex-1"></div>
+                <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Method Overview</h2>
+                <div class="h-px bg-gray-200 flex-1"></div>
+            </div>
+            
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8 mb-12">
+                <p class="text-gray-600 leading-relaxed mb-8 text-justify">
+                    The training pipeline of Spatia consists of two main stages: data pre-processing and multi-modal conditional generation. 
+                    In the <strong>View-Specific Scene Point Cloud Estimation</strong> stage (Figure a), we estimate a 3D scene point cloud from candidate frames (removing dynamic entities) and render it from specified camera viewpoints. 
+                    Simultaneously, in the <strong>Reference Frame Retrieval</strong> stage (Figure b), we select the most spatially relevant reference frames based on point cloud overlap. 
+                    Finally, in the <strong>Architecture</strong> stage (Figure c), the model employs a multi-modal diffusion transformer to generate target video clips conditioned on text, spatial memory, and temporal context.
+                </p>
+                <img src="./static/images/overview.png" class="w-full rounded-lg" alt="Spatia Method Overview" />
+            </div>
+        </section>
+
+        <!-- ================= GALLERY SECTIONS ================= -->
+
+        <!-- 1. Dynamic-Static Disentanglement Gallery -->
+        <section class="w-full">
+            <div class="max-w-5xl mx-auto px-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                    <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Dynamic-Static Disentanglement</h2>
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                </div>
+            </div>
+            <!-- Full width gallery container -->
+            <div id="carousel-dynamic" class="relative w-full h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden"></div>
+        </section>
+
+        <!-- 2. Spatially Consistent Generation Gallery -->
+        <section class="w-full">
+             <div class="max-w-5xl mx-auto px-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                    <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Spatially Consistent Generation</h2>
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                </div>
+            </div>
+            <div id="carousel-spatial" class="relative w-full h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden"></div>
+        </section>
+
+        <!-- 3. Explicit Camera Control Gallery -->
+        <section class="w-full">
+            <div class="max-w-5xl mx-auto px-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                    <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Long-horizon Scene Exploration</h2>
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                </div>
+            </div>
+            <div id="carousel-camera" class="relative w-full h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden"></div>
+        </section>
+
+        <!-- 4. 3D-Aware Interactive Editing (Single Video) - CONTROLLABLE & MOVED BADGE TO TOP-RIGHT -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="h-px bg-gray-200 flex-1"></div>
+                <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">3D-Aware Interactive Editing</h2>
+                <div class="h-px bg-gray-200 flex-1"></div>
+            </div>
+            <div class="flex justify-center">
+                 <div class="relative max-w-4xl w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-200" style="aspect-ratio: 1248 / 704;">
+                    <!-- Added controls attribute -->
+                    <video autoplay muted loop playsinline controls class="w-full h-full object-cover">
+                        <source src="./static/videos/video-edit.mp4" type="video/mp4">
+                    </video>
+                     <!-- Badge moved to Top-Right -->
+                     <div class="absolute top-4 right-4 bg-black/60 backdrop-blur text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none z-10">
+                        Editing Demo
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experiments -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div class="flex items-center gap-4 mb-8">
+                <div class="h-px bg-gray-200 flex-1"></div>
+                <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wider">Experiments & Results</h2>
+                <div class="h-px bg-gray-200 flex-1"></div>
+            </div>
+            
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8">
+                <img src="./static/images/exp.jpg" class="w-full h-auto mb-6 rounded-lg" alt="WorldScore Benchmark Results" />
+                <div class="text-gray-600 text-justify leading-relaxed">
+                    <p>
+                        We compare Spatia with two categories of models on the WorldScore benchmark: static scene generation models (e.g., WonderJourney, Voyager) and foundation video generation models (e.g., LTX-Video, Wan2.1). 
+                        As shown in the table, Spatia achieves the highest <strong class="text-primary">Average Score</strong> (69.73) and <strong class="text-primary">Dynamic Score</strong> (66.82), significantly outperforming baselines. 
+                        Specifically, Spatia successfully combines the strengths of both categories: it maintains high <strong>3D Consistency</strong> and <strong>Photo Consistency</strong> comparable to static scene generators, while offering superior motion generation capabilities (Object Control, Motion Smoothness) that surpass general foundation models.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-12">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-6 mb-6">
+                <a href="./static/pdf/spatia-paper.pdf" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition-colors text-2xl">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-primary transition-colors text-2xl">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+            <p class="text-sm text-gray-500 mb-2">
+                This website is licensed under a <a href="http://creativecommons.org/licenses/by-sa/4.0/" class="text-accent hover:underline">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+        </div>
+    </footer>
+    
+    <!-- Gallery Logic (Ghost Padding + Linear Navigation + Blank Padding for Small Sets + Controls) -->
+    <script>
+        const galleryData = {
+            'carousel-dynamic': [
+                { src: "./static/videos/dynamic-0.mp4" },
+                { src: "./static/videos/dynamic-1.mp4" },
+                { src: "./static/videos/dynamic-2.mp4" },
+                { src: "./static/videos/dynamic-3.mp4" },
+                { src: "./static/videos/dynamic-4.mp4" },
+                { src: "./static/videos/dynamic-5.mp4" },
+                { src: "./static/videos/dynamic-6.mp4" },
+                { src: "./static/videos/dynamic-7.mp4" },
+                { src: "./static/videos/dynamic-8.mp4" },
+                { src: "./static/videos/dynamic-9.mp4" },
+                { src: "./static/videos/dynamic-10.mp4" },
+                { src: "./static/videos/dynamic-11.mp4" },
+                { src: "./static/videos/dynamic-12.mp4" },
+                { src: "./static/videos/dynamic-13.mp4" }
+            ],
+            'carousel-spatial': [
+                { src: "./static/videos/static-0.mp4" },
+                { src: "./static/videos/static-1.mp4" },
+                { src: "./static/videos/static-2.mp4" },
+                { src: "./static/videos/static-3.mp4" },
+                { src: "./static/videos/static-4.mp4" },
+                { src: "./static/videos/static-5.mp4" },
+                { src: "./static/videos/static-6.mp4" },
+                { src: "./static/videos/static-7.mp4" },
+                { src: "./static/videos/static-8.mp4" },
+                { src: "./static/videos/static-9.mp4" },
+                { src: "./static/videos/static-10.mp4" },
+                { src: "./static/videos/static-11.mp4" },
+                { src: "./static/videos/static-12.mp4" },
+                { src: "./static/videos/static-13.mp4" },
+                { src: "./static/videos/static-14.mp4" },
+                { src: "./static/videos/static-15.mp4" },
+                { src: "./static/videos/static-16.mp4" },
+                { src: "./static/videos/static-17.mp4" }
+            ],
+            'carousel-camera': [
+                { src: "./static/videos/long-0.mp4" },
+                { src: "./static/videos/long-1.mp4" },
+                { src: "./static/videos/long-2.mp4" },
+                { src: "./static/videos/long-3.mp4" }
+            ]
+        };
+
+        class Carousel {
+            constructor(containerId, videos) {
+                this.container = document.getElementById(containerId);
+                
+                let renderVideos = [...videos];
+                
+                // Logic to ensure min 3 videos for proper display without repeating
+                // If fewer than 3, we pad with nulls to make it exactly 3 for display purposes
+                // But navigation boundaries will still respect the real item count.
+                if (renderVideos.length === 1) {
+                    renderVideos = [null, renderVideos[0], null];
+                    this.originalLength = 1;
+                    this.currentIndex = 1; // Center item
+                } else if (renderVideos.length === 2) {
+                    // For 2 items: [null, Item1, Item2, null] 
+                    renderVideos = [null, ...renderVideos, null]; 
+                    this.originalLength = 2;
+                    this.currentIndex = 1; // Start at first real item (Item1)
+                } else {
+                    // 3 or more items
+                    renderVideos = [null, ...renderVideos, null];
+                    this.originalLength = videos.length;
+                    // Start at index 2 (Video 2) so that we see {Vid1, Vid2, Vid3}
+                    this.currentIndex = 2; 
+                }
+                
+                this.videos = renderVideos;
+                this.cards = [];
+                this.init();
+            }
+
+            init() {
+                // Setup HTML structure
+                this.container.innerHTML = `
+                    <button class="prev-btn absolute left-2 md:left-4 z-40 p-3 bg-white/80 backdrop-blur-md text-primary rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-110 focus:outline-none">
+                        <i class="fas fa-chevron-left text-lg"></i>
+                    </button>
+                    <button class="next-btn absolute right-2 md:right-4 z-40 p-3 bg-white/80 backdrop-blur-md text-primary rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-110 focus:outline-none">
+                        <i class="fas fa-chevron-right text-lg"></i>
+                    </button>
+                    <div class="track relative w-full h-full"></div>
+                `;
+
+                this.track = this.container.querySelector('.track');
+                
+                this.videos.forEach(vid => {
+                    const card = document.createElement('div');
+                    
+                    if (vid === null) {
+                        // Create an empty invisible slot
+                        card.className = 'gallery-card empty'; // Custom class for empty slots
+                        // No video content
+                    } else {
+                        card.className = 'gallery-card bg-black';
+                        // Added controls to gallery videos as well
+                        card.innerHTML = `
+                            <video loop muted playsinline controls class="w-full h-full object-cover">
+                                <source src="${vid.src}" type="video/mp4">
+                            </video>
+                            <!-- No overlay badge for gallery items to keep them clean for controls -->
+                        `;
+                    }
+                    this.track.appendChild(card);
+                    this.cards.push(card);
+                });
+
+                this.container.querySelector('.prev-btn').onclick = () => this.move(-1);
+                this.container.querySelector('.next-btn').onclick = () => this.move(1);
+
+                this.update();
+            }
+
+            update() {
+                this.cards.forEach((card, i) => {
+                    const offset = i - this.currentIndex;
+                    
+                    // Reset styling classes, preserve basic class
+                    if (card.classList.contains('empty')) {
+                        card.className = 'gallery-card empty';
+                    } else {
+                        card.className = 'gallery-card bg-black';
+                    }
+                    
+                    // Apply classes based on position
+                    // Also handle play/pause only for real videos
+                    const video = card.querySelector('video');
+
+                    if (offset === 0) {
+                        card.classList.add('active');
+                        if(video) video.play();
+                    } else if (offset === -1) {
+                        card.classList.add('left');
+                        // Allowing side videos to play as well
+                        if(video) video.play(); 
+                    } else if (offset === 1) {
+                        card.classList.add('right');
+                        if(video) video.play();
+                    } else if (offset < -1) {
+                        card.classList.add('hidden-left');
+                        if(video) video.pause();
+                    } else {
+                        card.classList.add('hidden-right');
+                        if(video) video.pause();
+                    }
+                });
+            }
+
+            move(dir) {
+                const nextIndex = this.currentIndex + dir;
+                
+                // Real items are at indices [1 ... originalLength] in the padded array
+                
+                const minIndex = 1;
+                const maxIndex = this.videos.length - 2; // e.g. length 5 -> index 3 is max
+
+                // Boundary Checks
+                if (nextIndex < minIndex) {
+                    this.triggerBounce('prev');
+                    return;
+                }
+                if (nextIndex > maxIndex) {
+                    this.triggerBounce('next');
+                    return;
+                }
+
+                this.currentIndex = nextIndex;
+                this.update();
+            }
+
+            triggerBounce(direction) {
+                this.track.classList.remove('animate-bounce-prev', 'animate-bounce-next');
+                void this.track.offsetWidth;
+                if (direction === 'prev') {
+                    this.track.classList.add('animate-bounce-prev');
+                } else {
+                    this.track.classList.add('animate-bounce-next');
+                }
+                setTimeout(() => {
+                    this.track.classList.remove('animate-bounce-prev', 'animate-bounce-next');
+                }, 400);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new Carousel('carousel-dynamic', galleryData['carousel-dynamic']);
+            new Carousel('carousel-spatial', galleryData['carousel-spatial']);
+            new Carousel('carousel-camera', galleryData['carousel-camera']);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap');
+
+      .text-base {
+        font-family: 'Google Sans', 'Noto Sans', sans-serif;
+      }
+
+      /* 标题 Spatia */
+      .title {
+        font-weight: 700;
+        font-size: 150px;
+        fill: url(#spatiaGradient);
+        letter-spacing: -2px;
+      }
+
+      /* 副标题: #374151 (Tailwind gray-700) */
+      .subtitle {
+        font-weight: 500;
+        font-size: 48px;
+        fill: #374151; 
+        letter-spacing: -0.5px;
+      }
+
+      /* 描述文本: #6b7280 (Tailwind gray-500) */
+      .description {
+        font-weight: 400;
+        font-size: 28px;
+        fill: #6b7280;
+        line-height: 1.6;
+      }
+    </style>
+
+    <linearGradient id="spatiaGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <g class="text-base" transform="translate(640, 300)">
+    
+    <text x="0" y="0" text-anchor="middle" class="title">Spatia</text>
+
+    <text x="0" y="100" text-anchor="middle" class="subtitle">
+      Video Generation with Updatable Spatial Memory
+    </text>
+
+    <text x="0" y="180" text-anchor="middle" class="description">
+      <tspan x="0" dy="0">Long-horizon, spatially consistent video generation enabled by persistent 3D</tspan>
+      <tspan x="0" dy="45">scene point clouds and dynamic-static disentanglement.</tspan>
+    </text>
+    
+  </g>
+</svg>
