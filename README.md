@@ -27,15 +27,15 @@
 </p>
 
 <p align="center">
-  <a href="https://arxiv.org/abs/YOUR_ARXIV_ID">
+  <a href="https://github.com/ZhaoJingjing713/Spatia/blob/page/static/pdf/spatia-paper.pdf">
     <img src="https://img.shields.io/badge/arXiv-Paper-B31B1B?style=flat&labelColor=555555&logo=arxiv&logoColor=white" alt="arXiv">
   </a>
   &nbsp;
-  <a href="YOUR_PROJECT_PAGE_URL">
+  <a href="https://zhaojingjing713.github.io/Spatia/">
     <img src="https://img.shields.io/badge/Project-Page-4F46E5?style=flat&labelColor=555555&logo=googlechrome&logoColor=white" alt="Project Page">
   </a>
   &nbsp;
-  <a href="#">
+  <a href="https://github.com/ZhaoJingjing713/Spatia">
     <img src="https://img.shields.io/badge/Code-Coming%20Soon-FF5722?style=flat&labelColor=555555&logo=github&logoColor=white" alt="Code Coming Soon">
   </a>
 </p>
