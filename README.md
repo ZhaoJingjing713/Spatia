@@ -64,5 +64,5 @@ Furthermore, Spatia enables applications such as:
 ---
 
 <p align="center">
-  <small>© 2024 Spatia Project. Licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</small>
+  <small>© 2025 Spatia Project. Licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</small>
 </p>
