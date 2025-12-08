@@ -121,6 +121,53 @@
         .animate-bounce-next {
             animation: bounceNext 0.4s ease-in-out;
         }
+
+        /* ========================================== */
+        /* PLAYGROUND SPECIFIC STYLES                 */
+        /* ========================================== */
+        .playground-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background-color: white;
+            color: #374151; /* gray-700 */
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 9999px; /* full rounded */
+            font-weight: 500;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            cursor: pointer;
+            z-index: 30;
+        }
+
+        /* Hover State - Removed scale to fix shift issue */
+        .playground-btn:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+            color: #111827; /* gray-900 */
+        }
+
+        /* Active State (Black like the 'Paper' button) - Removed scale to fix shift issue */
+        .playground-btn.active {
+            background-color: #000000;
+            color: white;
+            border-color: #000000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Dotted connecting lines (Desktop only) */
+        @media (min-width: 768px) {
+            .connector-line {
+                position: absolute;
+                z-index: 5;
+                border: 1px dashed #e5e7eb;
+                pointer-events: none;
+            }
+        }
     </style>
 </head>
 <body class="font-sans antialiased overflow-x-hidden bg-gray-50">
@@ -197,19 +244,124 @@
                 </p>
             </div>
 
-            <!-- Featured Video (Teaser) - CONTROLLABLE & MOVED BADGE TO TOP-RIGHT -->
+            <!-- Featured Video (Teaser) -->
             <div class="relative w-full max-w-4xl mx-auto group">
                 <div class="absolute -inset-1 bg-gradient-to-r from-blue-200 to-purple-200 rounded-2xl blur-3xl opacity-40 group-hover:opacity-60 transition duration-500"></div>
                 <div class="relative bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-200 aspect-video">
-                    <!-- Added controls attribute -->
                     <video autoplay muted loop playsinline controls class="w-full h-full object-cover">
                         <source src="./static/videos/teaser-vid.mp4" type="video/mp4">
                     </video>
-                     <!-- Badge moved to Top-Right -->
+                     <!-- Badge -->
                      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none z-10">
                         Featured Result
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PLAYGROUND SECTION (NEW)                   -->
+        <!-- ========================================== -->
+        <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <!-- CHANGED: Removed Tag -->
+                
+                <!-- CHANGED: Simplified Title -->
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Interactive Playground
+                </h2>
+                
+                <!-- CHANGED: Updated Description to focus on Camera Control & Instruction Dynamics -->
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    Experience <strong>Explicit Camera Control</strong> combined with <strong>Instruction-Driven Dynamics</strong>. 
+                    Use the buttons below to drive diverse dynamic events via text instructions while following a precise camera trajectory.
+                </p>
+            </div>
+
+            <!-- Playground Container -->
+            <!-- On desktop: Fixed height for the orbital layout. On mobile: Auto height for stacking. -->
+            <div class="relative w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8 overflow-hidden">
+                
+                <!-- CHANGED: Increased height from 550px to 600px to give more room for buttons to spread out -->
+                <div class="relative flex flex-col md:block items-center justify-center md:h-[600px]">
+
+                    <!-- Central Video Player -->
+                    <!-- CHANGED: Width from 45% to 55% to make video larger -->
+                    <div class="relative z-10 w-full md:w-[55%] md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 aspect-video bg-black rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ease-in-out border border-gray-100">
+                        <!-- ADDED: controls attribute to enable play/pause/seek -->
+                        <video id="playground-video" autoplay muted loop playsinline controls class="w-full h-full object-cover">
+                            <!-- Default: Naive/Original -->
+                            <source src="./static/videos/interact-naive.mp4" type="video/mp4">
+                        </video>
+                        <!-- Loading/Transition Overlay -->
+                        <div id="video-overlay" class="absolute inset-0 bg-black bg-opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center">
+                            <i class="fas fa-circle-notch fa-spin text-white text-3xl opacity-0 transition-opacity duration-300"></i>
+                        </div>
+                    </div>
+
+                    <!-- Orbiting Buttons Container -->
+                    <!-- Desktop: Absolute positions. Mobile: Grid below video. -->
+                    <div class="grid grid-cols-2 gap-3 mt-8 md:mt-0 md:block w-full">
+                        
+                        <!-- 1. Naive / Original (Top Center) -->
+                        <!-- CHANGED: Moved to top-0 to push further out -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-naive.mp4')" 
+                            class="playground-btn active md:absolute md:top-0 md:left-1/2 md:-translate-x-1/2 group">
+                            <i class="fas fa-undo text-gray-400 group-hover:text-gray-600 group-[.active]:text-white"></i>
+                            <span>Original Control</span>
+                        </button>
+
+                        <!-- 2. Red Car (Top Left) -->
+                        <!-- CHANGED: Moved to left-0 and adjusted top to 12% to push to corner -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-car.mp4')" 
+                            class="playground-btn md:absolute md:top-[12%] md:left-0 group">
+                            <i class="fas fa-car-side text-red-500 group-[.active]:text-white"></i>
+                            <span>Drive in Red Sport Car</span>
+                        </button>
+
+                        <!-- 3. Storm (Top Right) -->
+                        <!-- CHANGED: Moved to right-0 and adjusted top to 12% to push to corner -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-weather.mp4')" 
+                            class="playground-btn md:absolute md:top-[12%] md:right-0 group">
+                            <span>Storm & Thunder</span>
+                            <i class="fas fa-bolt text-yellow-500 group-[.active]:text-white"></i>
+                        </button>
+
+                        <!-- 4. Joker (Bottom Left) -->
+                        <!-- CHANGED: Moved to left-0 and adjusted bottom to 12% to push to corner -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-joker.mp4')" 
+                            class="playground-btn md:absolute md:bottom-[12%] md:left-0 group">
+                            <i class="fas fa-walking text-purple-500 group-[.active]:text-white"></i>
+                            <span>Joker Walking</span>
+                        </button>
+
+                        <!-- 5. Dog (Bottom Right) -->
+                        <!-- CHANGED: Moved to right-0 and adjusted bottom to 12% to push to corner -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-dog.mp4')" 
+                            class="playground-btn md:absolute md:bottom-[12%] md:right-0 group">
+                            <span>Golden Retriever Playing</span>
+                            <i class="fas fa-dog text-orange-500 group-[.active]:text-white"></i>
+                        </button>
+
+                        <!-- 6. Boom (Bottom Center) -->
+                        <!-- CHANGED: Moved to bottom-0 to push further out -->
+                        <button onclick="changePlaygroundVideo(this, './static/videos/interact-boom.mp4')" 
+                            class="playground-btn md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 group">
+                            <i class="fas fa-bomb text-gray-600 group-[.active]:text-white"></i>
+                            <span>House Explosion</span>
+                        </button>
+
+                    </div>
+                    
+                    <!-- Decorative dashed circle (Desktop only visual cue) -->
+                    <!-- CHANGED: Adjusted size to match new spread (w-full h-full) -->
+                    <div class="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[85%] border border-dashed border-gray-200 rounded-[50%] pointer-events-none -z-0"></div>
+
+                </div>
+                
+                <p class="mt-4 md:mt-2 text-center text-xs text-gray-400">
+                    * Click capsules to swap the generated video based on the instruction.
+                </p>
             </div>
         </section>
 
@@ -299,7 +451,7 @@
             <div id="carousel-camera" class="relative w-full h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden"></div>
         </section>
 
-        <!-- 4. 3D-Aware Interactive Editing (Single Video) - CONTROLLABLE & MOVED BADGE TO TOP-RIGHT -->
+        <!-- 4. 3D-Aware Interactive Editing (Single Video) -->
         <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-4 mb-10">
                 <div class="h-px bg-gray-200 flex-1"></div>
@@ -308,11 +460,10 @@
             </div>
             <div class="flex justify-center">
                  <div class="relative max-w-4xl w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-200" style="aspect-ratio: 1248 / 704;">
-                    <!-- Added controls attribute -->
                     <video autoplay muted loop playsinline controls class="w-full h-full object-cover">
                         <source src="./static/videos/video-edit.mp4" type="video/mp4">
                     </video>
-                     <!-- Badge moved to Top-Right -->
+                     <!-- Badge -->
                      <div class="absolute top-4 right-4 bg-black/60 backdrop-blur text-white px-3 py-1 rounded-full text-sm font-medium pointer-events-none z-10">
                         Editing Demo
                     </div>
@@ -359,8 +510,46 @@
         </div>
     </footer>
     
-    <!-- Gallery Logic (Ghost Padding + Linear Navigation + Blank Padding for Small Sets + Controls) -->
+    <!-- Scripts -->
     <script>
+        // Playground Logic
+        function changePlaygroundVideo(btn, videoSrc) {
+            const video = document.getElementById('playground-video');
+            const overlay = document.getElementById('video-overlay');
+            const icon = overlay.querySelector('i');
+            const buttons = document.querySelectorAll('.playground-btn');
+
+            // 1. Update Buttons State
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // 2. Transition Effect
+            overlay.classList.remove('bg-opacity-0');
+            overlay.classList.add('bg-opacity-10'); // Flash a bit dark
+            icon.classList.remove('opacity-0'); // Show spinner
+
+            setTimeout(() => {
+                video.src = videoSrc;
+                video.play();
+                
+                // Fade out overlay after a short delay to ensure video loads
+                video.onloadeddata = () => {
+                     overlay.classList.remove('bg-opacity-10');
+                     overlay.classList.add('bg-opacity-0');
+                     icon.classList.add('opacity-0');
+                };
+                
+                // Fallback if event doesn't fire fast enough
+                setTimeout(() => {
+                     overlay.classList.remove('bg-opacity-10');
+                     overlay.classList.add('bg-opacity-0');
+                     icon.classList.add('opacity-0');
+                }, 500);
+
+            }, 200);
+        }
+
+        // Gallery Data and Logic
         const galleryData = {
             'carousel-dynamic': [
                 { src: "./static/videos/dynamic-0.mp4" },
@@ -411,24 +600,17 @@
                 this.container = document.getElementById(containerId);
                 
                 let renderVideos = [...videos];
-                
-                // Logic to ensure min 3 videos for proper display without repeating
-                // If fewer than 3, we pad with nulls to make it exactly 3 for display purposes
-                // But navigation boundaries will still respect the real item count.
                 if (renderVideos.length === 1) {
                     renderVideos = [null, renderVideos[0], null];
                     this.originalLength = 1;
-                    this.currentIndex = 1; // Center item
+                    this.currentIndex = 1; 
                 } else if (renderVideos.length === 2) {
-                    // For 2 items: [null, Item1, Item2, null] 
                     renderVideos = [null, ...renderVideos, null]; 
                     this.originalLength = 2;
-                    this.currentIndex = 1; // Start at first real item (Item1)
+                    this.currentIndex = 1; 
                 } else {
-                    // 3 or more items
                     renderVideos = [null, ...renderVideos, null];
                     this.originalLength = videos.length;
-                    // Start at index 2 (Video 2) so that we see {Vid1, Vid2, Vid3}
                     this.currentIndex = 2; 
                 }
                 
@@ -438,7 +620,6 @@
             }
 
             init() {
-                // Setup HTML structure
                 this.container.innerHTML = `
                     <button class="prev-btn absolute left-2 md:left-4 z-40 p-3 bg-white/80 backdrop-blur-md text-primary rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-110 focus:outline-none">
                         <i class="fas fa-chevron-left text-lg"></i>
@@ -455,17 +636,13 @@
                     const card = document.createElement('div');
                     
                     if (vid === null) {
-                        // Create an empty invisible slot
-                        card.className = 'gallery-card empty'; // Custom class for empty slots
-                        // No video content
+                        card.className = 'gallery-card empty'; 
                     } else {
                         card.className = 'gallery-card bg-black';
-                        // Added controls to gallery videos as well
                         card.innerHTML = `
                             <video loop muted playsinline controls class="w-full h-full object-cover">
                                 <source src="${vid.src}" type="video/mp4">
                             </video>
-                            <!-- No overlay badge for gallery items to keep them clean for controls -->
                         `;
                     }
                     this.track.appendChild(card);
@@ -481,16 +658,12 @@
             update() {
                 this.cards.forEach((card, i) => {
                     const offset = i - this.currentIndex;
-                    
-                    // Reset styling classes, preserve basic class
                     if (card.classList.contains('empty')) {
                         card.className = 'gallery-card empty';
                     } else {
                         card.className = 'gallery-card bg-black';
                     }
                     
-                    // Apply classes based on position
-                    // Also handle play/pause only for real videos
                     const video = card.querySelector('video');
 
                     if (offset === 0) {
@@ -498,7 +671,6 @@
                         if(video) video.play();
                     } else if (offset === -1) {
                         card.classList.add('left');
-                        // Allowing side videos to play as well
                         if(video) video.play(); 
                     } else if (offset === 1) {
                         card.classList.add('right');
@@ -515,13 +687,9 @@
 
             move(dir) {
                 const nextIndex = this.currentIndex + dir;
-                
-                // Real items are at indices [1 ... originalLength] in the padded array
-                
                 const minIndex = 1;
-                const maxIndex = this.videos.length - 2; // e.g. length 5 -> index 3 is max
+                const maxIndex = this.videos.length - 2; 
 
-                // Boundary Checks
                 if (nextIndex < minIndex) {
                     this.triggerBounce('prev');
                     return;
