@@ -19,7 +19,7 @@
 
 <p align="center" style="font-size: 0.9em; color: #666;">
   <sup>1</sup>The University of Sydney&nbsp;&nbsp;
-  <sup>2</sup>Microsoft Research Asia&nbsp;&nbsp;
+  <sup>2</sup>Microsoft Research&nbsp;&nbsp;
   <sup>3</sup>HKUST&nbsp;&nbsp;
   <sup>4</sup>University of Waterloo
   <br>
