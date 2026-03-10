@@ -32,7 +32,7 @@ uv_pip() {
 if [[ "$BACKEND" == "rocm" ]]; then
     uv_pip torch torchvision --index-url https://download.pytorch.org/whl/rocm6.4
 else
-    uv_pip torch torchvision --index-url https://download.pytorch.org/whl/cu126
+    uv_pip torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cu126
     uv_pip cupy-cuda12x==13.5.1 --no-cache-dir
 fi
 
