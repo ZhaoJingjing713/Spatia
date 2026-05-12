@@ -390,8 +390,8 @@ python inference.py \
   --prompt_path test_cases/case_1/prompt.txt \
   --save_path test_cases/case_1/output.mp4 \
   --work_dir test_cases/case_1/output \
-  --vace_path ./checkpoints/Spatia/step-8500.safetensors \
-  --lora_path ./checkpoints/Spatia/lora_weights_10000.safetensors
+  --vace_path checkpoints/Spatia/control_weight_8500.safetensors \
+  --lora_path checkpoints/Spatia/lora_weights_10000.safetensors
 ```
 
 ### Case 2
@@ -404,8 +404,8 @@ python inference.py \
   --prompt_path test_cases/case_2/prompt.txt \
   --save_path test_cases/case_2/output.mp4 \
   --work_dir test_cases/case_2/output \
-  --vace_path ./checkpoints/Spatia/step-8500.safetensors \
-  --lora_path ./checkpoints/Spatia/lora_weights_10000.safetensors
+  --vace_path checkpoints/Spatia/control_weight_8500.safetensors \
+  --lora_path checkpoints/Spatia/lora_weights_10000.safetensors
 ```
 
 ### Case 3
@@ -419,8 +419,8 @@ python inference.py \
   --mask_path test_cases/case_3/mask.png \
   --save_path test_cases/case_3/output.mp4 \
   --work_dir test_cases/case_3/output \
-  --vace_path ./checkpoints/Spatia/step-8500.safetensors \
-  --lora_path ./checkpoints/Spatia/lora_weights_10000.safetensors
+  --vace_path checkpoints/Spatia/control_weight_8500.safetensors \
+  --lora_path checkpoints/Spatia/lora_weights_10000.safetensors
 ```
 
 ---
