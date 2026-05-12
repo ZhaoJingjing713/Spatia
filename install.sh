@@ -38,6 +38,9 @@ fi
 
 uv_pip -r "$SCRIPT_DIR/requirements.txt" --no-cache-dir
 
+# setuptools>=82 removed pkg_resources; legacy setup.py (e.g. DiffSynth-Studio) still imports it.
+uv_pip "setuptools>=61,<82"
+
 if [[ "$BACKEND" == "rocm" ]]; then
     FLASH_ATTN_DIR="$BUILD_ROOT/flash-attention"
     if [[ ! -d "$FLASH_ATTN_DIR/.git" ]]; then
@@ -51,7 +54,9 @@ else
 fi
 
 uv_pip "git+https://github.com/modelscope/DiffSynth-Studio.git@v1.1.9" --no-build-isolation
+# decrease modelscope version to avoid the error:
+uv_pip modelscope==1.10.0
 uv_pip "git+https://github.com/facebookresearch/pytorch3d.git" --no-build-isolation
-uv_pip "git+https://github.com/facebookresearch/map-anything.git"
+uv_pip "git+https://github.com/facebookresearch/map-anything.git" --no-build-isolation
 
 python -c "from mapanything.models import MapAnything; MapAnything.from_pretrained('facebook/map-anything')"
