@@ -50,6 +50,9 @@ def downsample_dense_point_cloud(pcd, voxel_size):
     print("--- Starting voxel downsampling ---")
     points_before_downsample = len(pcd.points)
     print(f"Points before downsampling: {points_before_downsample}")
+    if points_before_downsample == 0:
+        print("Empty point cloud, nothing to downsample")
+        return pcd
     
     pcd_downsampled = pcd.voxel_down_sample(voxel_size)
     
@@ -80,6 +83,15 @@ def render_cams(args):
     pcd=o3d.io.read_point_cloud(args.data_path)
     points_xyz=np.asarray(pcd.points)
     points_rgb=np.asarray(pcd.colors)
+    if len(points_xyz) == 0:
+        print(f"[INFO] {args.data_path} has no points, writing background-only frames")
+        blank=Image.fromarray(np.zeros((height, width, 3), dtype=np.uint8))
+        rendered_images=[blank.copy() for _ in range(len(matrix_extrinsic))]
+        os.makedirs(args.output_path, exist_ok=True)
+        export_to_video(rendered_images, os.path.join(args.output_path, "render.mp4"), fps=24)
+        if args.score_render:
+            export_to_video(rendered_images, os.path.join(args.output_path, "render-score.mp4"), fps=24)
+        return
     points_scores=np.ones_like(points_rgb)*1.
     print("Warning: points_xyz_scores[...,3:]=1.")
     points_xyz_rgb=np.concatenate([points_xyz, points_rgb], axis=1)
